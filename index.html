@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dr. Calvin Mackie - Media Intelligence Tracker v1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { margin: 0; padding: 0; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+// Headshot (base64)
+const HEADSHOT = "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";
+
+// COMPLETE MEDIA DATASET
+const MEDIA_DATA = [
+  // == 2026 ==
+  { id:1, title:"Emerging Researchers National Conference - Closing Plenary Keynote", outlet:"AAAS / ERN Conference", type:"Keynote", date:"2026-03-21", year:2026, city:"Atlanta, GA", lat:33.75, lng:-84.39, url:"https://www.blackengineer.com/people/stem-leaders-inspire-at-2026-emerging-researchers-national-c/", description:"Closing plenary speaker at 2026 ERN Conference, inspiring next generation of STEM researchers from underrepresented communities.", tier:"Tier 1", featured:true },
+  { id:2, title:"11th Annual HBCU Climate Change Conference - Keynote", outlet:"HBCU Climate Change Consortium", type:"Keynote", date:"2026-03-19", year:2026, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Keynote address at the 11th Annual HBCU Climate Change Conference held in New Orleans.", tier:"Tier 1", featured:false },
+
+  // == 2025 ==
+  { id:3, title:"ASME Ralph Coats Roe Medal - Keynote at IMECE", outlet:"ASME", type:"Award", date:"2025-11-18", year:2025, city:"Memphis, TN", lat:35.15, lng:-90.05, url:"https://stemnola.com/dr-calvin-mackie-receives-2025-asme-ralph-coats-roe-medal/", description:"Received one of engineering's most distinguished honors, recognizing outstanding contribution toward public understanding of engineering's worth to society. Keynote at IMECE.", tier:"Tier 1", featured:true },
+  { id:4, title:"ASME Ralph Coats Roe Medal - Press Coverage (NOLA.com)", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2025-11-18", year:2025, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.nola.com/news/communities/crescent_city/stem-nola-founder-calvin-mackie-wins-a-top-engineering-award/article_7265124d-a4f9-4ac0-ad8b-d7561440e1da.html", description:"NOLA.com coverage of Mackie winning the ASME Ralph Coats Roe Medal, one of the top engineering honors in the world.", tier:"Tier 1", featured:false },
+  { id:5, title:"ASME Ralph Coats Roe Medal - National Press Release", outlet:"EINPresswire / CBS42 (national)", type:"Press", date:"2025-11-18", year:2025, city:"Remote", lat:38.9, lng:-77.04, url:"https://www.cbs42.com/business/press-releases/ein-presswire/868335785/trailblazing-educator-engineer-dr-calvin-mackie-honored-with-prestigious-asme-ralph-coats-roe-medal/", description:"National press release distributed via CBS affiliates announcing the ASME Ralph Coats Roe Medal.", tier:"Tier 2", featured:false },
+  { id:6, title:"Tuskegee University Scholarship Convocation - Guest Speaker", outlet:"Tuskegee University", type:"Keynote", date:"2025-10-17", year:2025, city:"Tuskegee, AL", lat:32.43, lng:-85.71, url:"https://www.tuskegee.edu/news/2025/10/Dr-Calvin-Mackie-founder-of-STEM-NOLA-STEM-Global-Action-will-serve-as-Scholarship-Convocation-Speaker-Oct-17.html", description:"Guest speaker at Tuskegee University Scholarship Convocation on academic excellence and STEM leadership.", tier:"Tier 1", featured:false },
+  { id:7, title:"Champion of STEM (Class of 2025)", outlet:"STEM Learning Ecosystems (SLECoP)", type:"Award", date:"2025-10-21", year:2025, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"https://bizneworleans.com/stem-nola-stem-global-action-ceo-named-as-champion/", description:"Named Champion of STEM by STEM Learning Ecosystems Community of Practice at ceremony in Washington, D.C.", tier:"Tier 1", featured:true },
+  { id:8, title:"Katrina: Come Hell and High Water (Spike Lee, Netflix)", outlet:"Netflix", type:"Documentary", date:"2025-08-27", year:2025, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.imdb.com/title/tt35672864/", description:"Three-part Netflix series executive produced by Spike Lee for 20th anniversary of Hurricane Katrina. Dr. Mackie returns as featured subject in Episode 3. Third Spike Lee documentary featuring Mackie spanning 19 years.", tier:"Tier 1", featured:true },
+  { id:9, title:"When Playing Becomes Learning", outlet:"The Saturday Evening Post", type:"Article", date:"2025-07-01", year:2025, city:"Remote", lat:38.9, lng:-77.04, url:"https://www.saturdayeveningpost.com/2025/07/when-playing-becomes-learning/", description:"National feature in The Saturday Evening Post on Dr. Mackie and STEM NOLA's approach to making STEM education accessible through play and hands-on learning.", tier:"Tier 1", featured:true },
+  { id:10, title:"Tulane Outstanding Social Entrepreneur of the Year", outlet:"Tulane Lepage Center", type:"Award", date:"2025-03-25", year:2025, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://freemannews.tulane.edu/2025/03/27/emily-and-alon-shaya-calvin-mackie-honored-as-2025-entrepreneurs-of-the-year", description:"Named 2025 Outstanding Social Entrepreneur by Tulane University. Presented at Audubon Tea Room, New Orleans.", tier:"Tier 1", featured:true },
+  { id:11, title:"Presidential Award for Excellence in STEM Mentoring (PAESMEM) - Organizational", outlet:"White House / NSF (Biden)", type:"Award", date:"2025-01-15", year:2025, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"https://www.wspa.com/business/press-releases/ein-presswire/777283012/president-biden-honors-stem-nola-with-the-prestigious-presidential-award-for-excellence-in-mentoring-stem-students/", description:"STEM NOLA receives nation's highest mentoring honor from President Biden. Second Presidential Award (individual was 2003). Includes $10,000 prize.", tier:"Tier 1", featured:true },
+  { id:12, title:"The Face of STEM Education 2025: Dr. Calvin Mackie", outlet:"MyNewOrleans.com / New Orleans Magazine", type:"Article", date:"2025-01-01", year:2025, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.myneworleans.com/the-face-of-stem-education-2025-dr-calvin-mackie-stem-nola/", description:"Named The Face of STEM Education 2025 by New Orleans Magazine.", tier:"Tier 1", featured:false },
+
+  // == 2024 ==
+  { id:13, title:"AARP Purpose Prize Award ($50,000)", outlet:"AARP", type:"Award", date:"2024-10-01", year:2024, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"https://www.aarp.org/about-aarp/purpose-prize/winners/calvin-mackie.html", description:"One of seven national winners of the AARP Purpose Prize ($50,000). Ceremony Oct 1, 2024 in Washington. Honorary co-awardee: Taraji P. Henson.", tier:"Tier 1", featured:true },
+  { id:14, title:"AARP Purpose Prize - NOLA.com Coverage", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2024-09-16", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.nola.com/entertainment_life/stem-nola-founder-calvin-mackie-honored-with-aarp-award/article_68c720b8-6b8b-11ef-9f82-7fd5e0fa3065.html", description:"NOLA.com coverage of Dr. Mackie winning the AARP Purpose Prize Award.", tier:"Tier 2", featured:false },
+  { id:15, title:"AARP Purpose Prize - Biz New Orleans Coverage", outlet:"Biz New Orleans", type:"Article", date:"2024-09-16", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://bizneworleans.com/dr-calvin-mackie-honored-as-winner-of-the-aarp-purpose-prize-award-for-stem-nola/", description:"Biz New Orleans coverage of the AARP Purpose Prize win.", tier:"Tier 2", featured:false },
+  { id:16, title:"APTA Workforce Summit - Keynote", outlet:"American Public Transportation Assoc.", type:"Keynote", date:"2024-08-23", year:2024, city:"Remote", lat:38.9, lng:-77.04, url:"https://learning.aptagateway.com/products/apta-workforce-summit-keynote-dr-calvin-mackie-phd", description:"Keynote on attracting the next generation of transit/STEM professionals at APTA Workforce Summit.", tier:"Tier 1", featured:false },
+  { id:17, title:"Help Community-Based STEM Education Programs", outlet:"Hudson Valley Press", type:"Article", date:"2024-06-05", year:2024, city:"New York, NY", lat:40.71, lng:-74.01, url:"https://hudsonvalleypress.com/2024/06/05/help-community-based-stem-education-programs/", description:"Feature on STEM Global Action's community-based education model and call for support.", tier:"Tier 2", featured:false },
+  { id:18, title:"Lesson for NY Gov. Kathy Hochul: Put Resources Into Effective STEM Programs", outlet:"Forbes", type:"Op-Ed", date:"2024-05-17", year:2024, city:"Remote", lat:38.9, lng:-77.04, url:"https://www.forbes.com/sites/calvinmackie/2024/05/17/", description:"Forbes contributor op-ed responding to Gov. Hochul's controversial remarks about Black children and computers.", tier:"Tier 1", featured:true },
+  { id:19, title:"University of Holy Cross 2024 Commencement - Keynote", outlet:"University of Holy Cross", type:"Keynote", date:"2024-05-19", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Commencement keynote at University of Holy Cross. Photo coverage by NOLA.com.", tier:"Tier 1", featured:false },
+  { id:20, title:"White House Space STEM Forum", outlet:"White House / National Space Council", type:"Policy", date:"2024-04-01", year:2024, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"https://stemnola.com/sga-founder-dr-calvin-mackie-attends-white-house-space-stem-forum-with-amazing-new-orleans-9th-grader-on-path-to-becoming-an-astrophysicist/", description:"Participated in Biden-Harris White House Space STEM Forum alongside a 9th-grade STEM NOLA student mentee.", tier:"Tier 1", featured:false },
+  { id:21, title:"Greentrike Symposium - Keynote", outlet:"Greentrike", type:"Keynote", date:"2024-04-26", year:2024, city:"Tacoma, WA", lat:47.25, lng:-122.44, url:"https://greentrike.org/press-release/symposium-2024-speakers", description:"Keynote at Greentrike Symposium on Building a Child and Youth Centered Community in Pierce County.", tier:"Tier 2", featured:false },
+  { id:22, title:"Kingfish 2024: Dr. Calvin Mackie", outlet:"New Orleans Magazine", type:"Article", date:"2024-01-01", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.myneworleans.com/2024-kingfish-dr-calvin-mackie/", description:"Named Kingfish 2024 by New Orleans Magazine, a prestigious annual community men's honor.", tier:"Tier 1", featured:true },
+  { id:23, title:"Eric and Wendy Schmidt Awards for Excellence in Science Communications", outlet:"National Academies / Schmidt Futures", type:"Award", date:"2024-01-12", year:2024, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"https://stemnola.com/calvin-mackie-honored-as-recipient-for-eric-and-wendy-schmidt-awards-for-excellence-in-science-communications/", description:"One of 24 national winners. Recognizes excellence in making science understandable in underserved communities. Ceremony Jan 11-12, 2024.", tier:"Tier 1", featured:true },
+  { id:24, title:"Schmidt Awards - NOLA.com Coverage", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2024-01-12", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.nola.com/entertainment_life/stem-nolas-calvin-mackie-gets-national-honor/article_7f52b1bc-7d9d-11ee-91e7-d365b4ce5c13.html", description:"NOLA.com coverage of Dr. Mackie receiving the Eric and Wendy Schmidt Awards.", tier:"Tier 2", featured:false },
+  { id:25, title:"ASME Foundation Recognition Event", outlet:"ASME Foundation", type:"Award", date:"2024-01-01", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.asme.org/about-asme/media-inquiries/press-releases/asme-foundation-honors-stem-nola-founder-and-president-calvin-mackie,-ph-d-,-at-new-orleans-event", description:"Honored at New Orleans event. ASME INSPIRE Scholarship ($5K) created for STEM NOLA Fellow.", tier:"Tier 2", featured:false },
+  { id:26, title:"Louisiana Association of Educators President's Award", outlet:"LAE", type:"Award", date:"2024-01-01", year:2024, city:"Baton Rouge, LA", lat:30.45, lng:-91.19, url:"https://www.myneworleans.com/dr-calvin-mackie-receives-presidents-award-from-louisiana-association-of-educators/", description:"Statewide LAE President's Award for commitment to serving children and creating STEM education opportunities.", tier:"Tier 2", featured:false },
+  { id:27, title:"Microsoft/NFL STEM Event at Dillard University", outlet:"WWL-TV / Microsoft / NFL", type:"TV", date:"2024-02-01", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"WWL-TV coverage of Microsoft and NFL hosting educational STEM event for Dillard University in partnership with STEM NOLA. 50 Surface laptops donated.", tier:"Tier 2", featured:false },
+  { id:28, title:"Face of STEM Education: STEM NOLA", outlet:"MyNewOrleans.com", type:"Article", date:"2024-01-01", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.myneworleans.com/face-of-stem-education-stem-nola/", description:"Named Face of STEM Education 2024 by New Orleans Magazine.", tier:"Tier 2", featured:false },
+
+  // == 2023 ==
+  { id:29, title:"ABET Engineering Change Award (Inaugural Winner)", outlet:"ABET", type:"Award", date:"2023-08-04", year:2023, city:"Baltimore, MD", lat:39.29, lng:-76.61, url:"https://www.prnewswire.com/news-releases/stem-nola-wins-engineering-chnge-award-301893837.html", description:"STEM NOLA becomes first-ever organizational winner of ABET Engineering Change Award. Ceremony at Baltimore Marriott. $5,000 prize.", tier:"Tier 1", featured:true },
+  { id:30, title:"The Eduvangelist: Calvin Mackie is a fire and brimstone preacher for STEM education", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2023-08-28", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.nola.com/louisiana_inspired/calvin-mackie-is-a-fire-and-brimstone-preacher-for-stem-education/article_ee691bc4-45dd-11ee-a50b-e3a6de83d452.html", description:"Major NOLA.com 'Louisiana Inspired' feature profiling Dr. Mackie as the 'Eduvangelist' of STEM education.", tier:"Tier 1", featured:true },
+  { id:31, title:"NOPD Recruit Class 196 Graduation - Keynote", outlet:"New Orleans Police Department", type:"Keynote", date:"2023-03-31", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Keynote speaker at NOPD Recruit Class 196 graduation ceremony at SUNO. Photographed by NOLA.com.", tier:"Tier 2", featured:false },
+  { id:32, title:"Association of Children's Museums InterActivity 2023 - Opening Plenary", outlet:"Assoc. of Children's Museums", type:"Keynote", date:"2023-04-27", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://childrensmuseums.org/2023/03/27/dr-calvin-mackie-announces-as-keynote-presenter-at-association-of-childrens-museums-interactivity-2023/", description:"Opening plenary keynote: 'Today's Tinkers are Tomorrow's Inventors.' National museum conference.", tier:"Tier 1", featured:false },
+  { id:33, title:"University of Arizona Global Campus Spring 2023 Commencement", outlet:"UAGC", type:"Keynote", date:"2023-05-01", year:2023, city:"Remote", lat:32.23, lng:-110.95, url:"https://www.uagc.edu/blog/meet-dr-calvin-mackie", description:"Commencement keynote on hope as a transformative force in education.", tier:"Tier 1", featured:false },
+  { id:34, title:"Florida A&M University Spring 2023 Commencement", outlet:"Florida A&M University", type:"Keynote", date:"2023-05-05", year:2023, city:"Tallahassee, FL", lat:30.42, lng:-84.28, url:"", description:"Commencement keynote at Florida A&M University.", tier:"Tier 1", featured:false },
+  { id:35, title:"University of Minnesota IEM Distinguished Keynote", outlet:"University of Minnesota", type:"Keynote", date:"2023-04-19", year:2023, city:"Minneapolis, MN", lat:44.97, lng:-93.27, url:"https://dmd.umn.edu/2023/wednesday-keynote", description:"Distinguished keynote: 'Re-Thinking STEM Outreach and Engagement: Building Capacity through Building Community' at Design of Medical Devices Conference.", tier:"Tier 1", featured:false },
+  { id:36, title:"ASME Foundation 'Reinventing the Future' Gala", outlet:"ASME Foundation", type:"Conference", date:"2023-04-27", year:2023, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"https://www.asmefoundation.org/dc2023/", description:"Featured speaker at ASME Foundation gala at Willard InterContinental Hotel, Washington, D.C.", tier:"Tier 2", featured:false },
+  { id:37, title:"NSF I-Corps Northeast Hub Annual Meeting - Keynote", outlet:"NSF I-Corps / Princeton University", type:"Keynote", date:"2023-10-18", year:2023, city:"Princeton, NJ", lat:40.35, lng:-74.66, url:"https://icorpsnortheasthub.org/people/calvin-mackie", description:"Keynote at NSF I-Corps Hub Northeast Annual Meeting at Princeton University.", tier:"Tier 1", featured:false },
+  { id:38, title:"Boeing Invests $1 Million in STEM NOLA", outlet:"Boeing / WWL-TV", type:"TV", date:"2023-02-13", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"WWL-TV CBS 4 coverage of Boeing's $1 million investment in STEM NOLA's New Orleans East Innovation Hub facility.", tier:"Tier 1", featured:false },
+  { id:39, title:"Boeing Donates $1 Million Toward STEM NOLA Facility", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2023-02-13", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"NOLA.com education coverage of Boeing's $1 million donation to expand STEM NOLA's N.O. East facility.", tier:"Tier 1", featured:false },
+  { id:40, title:"The Mackie Mission: Local Entrepreneur's Program Helping Students Excel", outlet:"FOX 8 Live (WVUE)", type:"TV", date:"2023-02-17", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://fox8live.com/2023/02/17/mackie-mission-local-entrepreneurs-educational-program-helping-students-excel-academically/", description:"Comprehensive FOX 8 feature on STEM NOLA programs reaching 100,000+ students K-12.", tier:"Tier 1", featured:false },
+  { id:41, title:"Rocket Day 2023 Inspires Fun and Learning", outlet:"FOX 8 Live (WVUE)", type:"TV", date:"2023-07-08", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://fox8live.com/2023/07/08/stem-nola-rocket-day-inspires-fun-learning/", description:"FOX 8 coverage of annual STEM NOLA Rocket Day in partnership with Boeing and NASA.", tier:"Tier 2", featured:false },
+  { id:42, title:"STEM NOLA Wins ENGINEERING CHANGE Award", outlet:"MyNewOrleans.com", type:"Article", date:"2023-08-04", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.myneworleans.com/stem-nola-wins-engineering-ch%CE%B4nge-award/", description:"MyNewOrleans.com coverage of STEM NOLA winning inaugural ABET Engineering Change Award.", tier:"Tier 2", featured:false },
+  { id:43, title:"First-Ever STEM Fest at a College Football Bowl Game", outlet:"SGA Newsroom", type:"Press", date:"2023-12-01", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://stemglobalaction.com/landmark-moment-stem-nola-holds-first-ever-stem-fest/", description:"Landmark: STEM NOLA hosts first-ever STEM Fest at the New Orleans Bowl, merging college football with STEM education.", tier:"Tier 1", featured:false },
+
+  // == 2022 ==
+  { id:44, title:"Talking Business: A Superhero in His Own Right, Calvin Mackie on Quest to Expose Kids to STEM", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2022-11-14", year:2022, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.nola.com/news/business/calvin-mackie-on-stem-nola-and-why-it-matters/article_5cb26cca-6399-11ed-8329-eb6b5e335971.html", description:"Major NOLA.com business section interview profiling Dr. Mackie as 'a superhero in his own right.'", tier:"Tier 1", featured:false },
+  { id:45, title:"AASHTO 2022 Annual Meeting - Keynote", outlet:"AASHTO", type:"Keynote", date:"2022-10-01", year:2022, city:"Orlando, FL", lat:28.54, lng:-81.38, url:"", description:"Keynote at American Association of State Highway and Transportation Officials annual meeting on STEM education and racial equity.", tier:"Tier 1", featured:false },
+  { id:46, title:"MSU Denver Rachel B. Noel Distinguished Visiting Professor - Keynote", outlet:"MSU Denver", type:"Keynote", date:"2022-03-09", year:2022, city:"Denver, CO", lat:39.74, lng:-104.99, url:"", description:"'Stronger STEM, Stronger Society' keynote as Rachel B. Noel Distinguished Visiting Professor at Metropolitan State University of Denver.", tier:"Tier 1", featured:false },
+  { id:47, title:"Mackie Brothers Bring Multi-Million Dollar Projects to New Orleans East", outlet:"FOX 8 Live (WVUE)", type:"TV", date:"2022-03-19", year:2022, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://fox8live.com/2022/03/19/mackie-brothers-bring-multi-million-dollar-projects-expand-arts-sciences-new-orleans-east/", description:"FOX 8 feature on Calvin and Anthony Mackie's 42,000 sq ft STEM Innovation Hub development in New Orleans East.", tier:"Tier 1", featured:true },
+  { id:48, title:"Rocket Day 2022 Provides Space Ambition Liftoff", outlet:"FOX 8 Live (WVUE)", type:"TV", date:"2022-07-23", year:2022, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://fox8live.com/2022/07/23/rocket-day-provides-space-ambition-liftoff/", description:"FOX 8 coverage of Rocket Day 2022 engaging 300+ students with Boeing engineers.", tier:"Tier 2", featured:false },
+
+  // == 2021 ==
+  { id:49, title:"Anthony Mackie's Black Captain America is a STEM Hit", outlet:"Atlanta Daily World", type:"Article", date:"2021-09-22", year:2021, city:"Atlanta, GA", lat:33.75, lng:-84.39, url:"https://atlantadailyworld.com/2021/09/22/anthony-mackies-black-captain-america-is-a-stem-hit/", description:"Feature on how Dr. Mackie draws parallels between brother Anthony's Captain America role and STEM education.", tier:"Tier 2", featured:false },
+  { id:50, title:"Calvin Mackie's Mission: Get More Kids Interested in STEM", outlet:"George Mason University", type:"Article", date:"2021-10-20", year:2021, city:"Fairfax, VA", lat:38.83, lng:-77.31, url:"https://president.gmu.edu/news/2021-10/calvin-mackies-mission-get-more-kids-interested-stem", description:"George Mason University feature on Mackie's presidential investiture keynote and STEM mission.", tier:"Tier 2", featured:false },
+  { id:51, title:"Dr. Calvin Mackie Launches New STEM Global Action Campaign", outlet:"US Black Engineer & IT", type:"Article", date:"2021-06-01", year:2021, city:"Remote", lat:38.9, lng:-77.04, url:"https://www.blackengineer.com/article/dr-calvin-mackie-launches-new-stem-global-action-campaign/", description:"Coverage of STEM Global Action national launch campaign.", tier:"Tier 2", featured:false },
+  { id:52, title:"NowThis Politics - Former Engineering Prof Empowers Students", outlet:"NowThis Politics / Facebook", type:"Social", date:"2021-01-01", year:2021, city:"Remote", lat:38.9, lng:-77.04, url:"https://www.facebook.com/NowThisPolitics/videos/602470181179979/", description:"Viral NowThis Politics video: 111K views, 493 likes, 223 shares. Notes Mackie as 'older brother of Marvel star Anthony Mackie.'", tier:"Tier 1", featured:true },
+  { id:53, title:"STEM NOLA Receives $1.25M Kellogg Foundation Grant", outlet:"PR Newswire", type:"Press", date:"2021-04-22", year:2021, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.prnewswire.com/news-releases/stem-nola-receives-1-25m-to-seed-42-000-sf-stem-nola-innovation-hub-and-expand-award-winning-stem-programming-301275394.html", description:"W.K. Kellogg Foundation awards $1.25 million 3-year grant for STEM Innovation Center and program expansion.", tier:"Tier 1", featured:false },
+  { id:54, title:"A $10M Education Hub and Global Reach: STEM NOLA Has Come a Long Way", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2021-06-01", year:2021, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Major NOLA.com education feature tracking STEM NOLA's growth from garage Saturdays to $10M hub with global reach.", tier:"Tier 1", featured:false },
+  { id:55, title:"STEM Education Coalition Congressional Briefing", outlet:"STEM Education Coalition / Congress", type:"Policy", date:"2021-05-01", year:2021, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"", description:"Speaker at STEM Education Coalition briefing for Congressional staff on community-based STEM models.", tier:"Tier 1", featured:false },
+
+  // == 2020 ==
+  { id:56, title:"STEM NOLA Receives $2.79M Department of Defense Grant", outlet:"PR Newswire", type:"Press", date:"2020-10-08", year:2020, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.prnewswire.com/news-releases/stem-nola-receives-nearly-3m-department-of-defense-grant-to-expand-stem-education-301148687.html", description:"U.S. DoD National Defense Education Program awards $2.79M (3-year) to STEM NOLA. One of only 12 awards totaling $31M nationwide.", tier:"Tier 1", featured:true },
+  { id:57, title:"The Story Behind Anthony Mackie's New Orleans Clan of Entrepreneurs", outlet:"NOLA.com / Times-Picayune", type:"Article", date:"2020-11-01", year:2020, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Major NOLA.com feature on the Mackie family's entrepreneurial legacy in New Orleans, including Calvin and Anthony.", tier:"Tier 1", featured:false },
+  { id:58, title:"Grambling State University Fall 2020 Commencement - Keynote", outlet:"Grambling State University", type:"Keynote", date:"2020-12-01", year:2020, city:"Grambling, LA", lat:32.53, lng:-92.71, url:"", description:"Commencement keynote at Grambling State University.", tier:"Tier 1", featured:false },
+  { id:59, title:"STEM NOLA Brings Online Education in Response to COVID-19", outlet:"New Orleans Tribune", type:"Article", date:"2020-05-13", year:2020, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Coverage of STEM NOLA's pivot to virtual programming during COVID-19 pandemic.", tier:"Tier 2", featured:false },
+  { id:60, title:"STEMForward sySTEMnow Conference - Virtual Keynote", outlet:"STEMForward", type:"Keynote", date:"2020-10-29", year:2020, city:"Milwaukee, WI", lat:43.04, lng:-87.9, url:"", description:"Virtual keynote at STEMForward's sySTEMnow Conference.", tier:"Tier 2", featured:false },
+
+  // == 2019 ==
+  { id:61, title:"Congressional Black Caucus Foundation Chair's Phoenix Award", outlet:"CBCF", type:"Award", date:"2019-09-14", year:2019, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"", description:"CBCF's highest honor. Presented by Rep. Cedric Richmond at ALC Phoenix Awards Dinner. Fellow honorees: Dr. Wanda Austin, Rep. Barbara Lee, The Exonerated Five, Rev. Al Sharpton.", tier:"Tier 1", featured:true },
+  { id:62, title:"STEM Education is a Social Justice Issue", outlet:"Biz New Orleans", type:"Article", date:"2019-09-01", year:2019, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://bizneworleans.com/stem-education-is-a-social-justice-issue/", description:"Biz New Orleans feature on Dr. Mackie receiving the CBCF Phoenix Award and his social justice framework for STEM.", tier:"Tier 1", featured:false },
+  { id:63, title:"Bridging the Belief Gap", outlet:"New Orleans Tribune", type:"Article", date:"2019-10-28", year:2019, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Major New Orleans Tribune feature on Dr. Mackie's mission to bridge the belief gap in underserved communities.", tier:"Tier 1", featured:false },
+  { id:64, title:"STEM NOLA's Rocket Day Celebrates Apollo 11 Anniversary", outlet:"WWL-TV (CBS 4)", type:"TV", date:"2019-07-01", year:2019, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"WWL-TV coverage of Rocket Day 2019 celebrating 50th anniversary of Apollo 11 moon landing at City Park.", tier:"Tier 2", featured:false },
+
+  // == 2018 ==
+  { id:65, title:"White House State-Federal STEM Summit", outlet:"White House / OSTP", type:"Policy", date:"2018-06-25", year:2018, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"", description:"Represented Louisiana at the White House State-Federal STEM Summit.", tier:"Tier 1", featured:false },
+  { id:66, title:"STEM NOLA FOX 8 Segment", outlet:"FOX 8 Live (WVUE)", type:"TV", date:"2018-09-18", year:2018, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://fox8live.com/video/2018/09/18/stem-nola/", description:"FOX 8 video segment on STEM NOLA programs and community impact.", tier:"Tier 2", featured:false },
+
+  // == 2017 ==
+  { id:67, title:"LaSTEM Advisory Council Appointment", outlet:"Office of the Governor (Edwards)", type:"Policy", date:"2017-10-01", year:2017, city:"Baton Rouge, LA", lat:30.45, lng:-91.19, url:"", description:"Appointed by Gov. John Bel Edwards to Louisiana STEM Advisory Council (LaSTEM) to coordinate statewide STEM education.", tier:"Tier 1", featured:false },
+
+  // == 2016 ==
+  { id:68, title:"STEM NOLA Receives $270K Grant for Lower Ninth Ward", outlet:"Biz New Orleans", type:"Article", date:"2016-09-01", year:2016, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://bizneworleans.com/September-2016/STEM-NOLA-Receives-270K-Grant/", description:"Louisiana DOE 21st Century Community Learning Center grant of $270,000 for Lower 9th Ward programming.", tier:"Tier 2", featured:false },
+
+  // == 2015 ==
+  { id:69, title:"Return to the 'City That Care Forgot' - 10th Anniversary of Katrina", outlet:"CNN (Opinions)", type:"Article", date:"2015-08-12", year:2015, city:"Remote", lat:38.9, lng:-77.04, url:"https://edition.cnn.com/2015/08/12/opinions/new-orleans-katrina-city-care-forgot", description:"CNN opinion piece with extensive Mackie quotes on post-Katrina New Orleans 10 years later.", tier:"Tier 1", featured:false },
+
+  // == 2013 ==
+  { id:70, title:"UNCF Legacy Award", outlet:"UNCF", type:"Award", date:"2013-02-15", year:2013, city:"Atlanta, GA", lat:33.75, lng:-84.39, url:"https://www.me.gatech.edu/me-alumnus-receives-three-prestigious-awards", description:"Highest honor for UNCF college alumni. Presented at Atlanta Marriott Marquis. Recognized long-standing commitment to student potential.", tier:"Tier 1", featured:true },
+  { id:71, title:"Morehouse College Bennie Award in Achievement", outlet:"Morehouse College", type:"Award", date:"2013-02-16", year:2013, city:"Atlanta, GA", lat:33.75, lng:-84.39, url:"https://www.me.gatech.edu/me-alumnus-receives-three-prestigious-awards", description:"Presented at Morehouse's 'Candle in the Dark' Gala during Founders Week.", tier:"Tier 1", featured:false },
+  { id:72, title:"Jack Leadership and Community Service Award", outlet:"Jack and Jill of America (NOLA)", type:"Award", date:"2013-02-24", year:2013, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.me.gatech.edu/me-alumnus-receives-three-prestigious-awards", description:"Recognized for professional leadership, fatherhood, and community service, especially post-Katrina recovery.", tier:"Tier 2", featured:false },
+  { id:73, title:"Mississippi State University Men of Color Summit - Keynote", outlet:"Mississippi State University", type:"Keynote", date:"2013-09-01", year:2013, city:"Starkville, MS", lat:33.46, lng:-88.82, url:"https://www.newsarchive.msstate.edu/newsroom/article/2005/10/tulane-engineer-motivational-speaker-calvin-mackie-visit-msu", description:"Keynote at MSU Men of Color Summit on leadership and STEM education.", tier:"Tier 2", featured:false },
+
+  // == 2012 ==
+  { id:74, title:"My View: Education is Useless", outlet:"CNN (Opinion)", type:"Op-Ed", date:"2012-09-19", year:2012, city:"Remote", lat:38.9, lng:-77.04, url:"https://edition.cnn.com/2012/09/19/us/my-view-education-is-useless/index.html", description:"Bylined CNN opinion piece arguing education is 'useless' without motivation, drawing on grandmother's wisdom.", tier:"Tier 1", featured:true },
+  { id:75, title:"Living Now Book Awards - Silver Medal (Grandma's Hands)", outlet:"Jenkins Group / Living Now Awards", type:"Award", date:"2012-01-01", year:2012, city:"Remote", lat:38.9, lng:-77.04, url:"http://www.independentpublisher.com/article.php?page=1577", description:"Silver Medal in Gift/Keepsake category for 'Grandma's Hands: Cherished Moments of Faith and Wisdom.'", tier:"Tier 2", featured:false },
+
+  // == 2010 ==
+  { id:76, title:"If God Is Willing and Da Creek Don't Rise (Spike Lee, HBO)", outlet:"HBO", type:"Documentary", date:"2010-08-01", year:2010, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.imdb.com/title/tt1587373/", description:"Sequel HBO documentary by Spike Lee. Dr. Mackie returns as featured participant for 5-year post-Katrina follow-up. Won Peabody Award.", tier:"Tier 1", featured:true },
+
+  // == 2009 ==
+  { id:77, title:"Emerging Leaders Energized in the Black Community", outlet:"CNN (Living)", type:"Article", date:"2009-06-02", year:2009, city:"Remote", lat:38.9, lng:-77.04, url:"http://edition.cnn.com/2009/LIVING/06/02/bia.emerging.black.leaders/index.html", description:"CNN profile of Mackie as Morehouse alumnus, businessman, author, lecturer, and Chairman of LA Council on Social Status of Black Men.", tier:"Tier 1", featured:false },
+  { id:78, title:"Louisiana Council on Social Status of Black Boys and Black Men - Chairman", outlet:"Office of the Governor (Jindal)", type:"Policy", date:"2009-01-01", year:2009, city:"Baton Rouge, LA", lat:30.45, lng:-91.19, url:"", description:"Appointed Chairman by Gov. Bobby Jindal. State-level policy role creating programs for Black males and families.", tier:"Tier 1", featured:false },
+
+  // == 2006 ==
+  { id:79, title:"When the Levees Broke: A Requiem in Four Acts (Spike Lee, HBO)", outlet:"HBO", type:"Documentary", date:"2006-08-21", year:2006, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.imdb.com/title/tt0783612/", description:"Featured commentator in Emmy Award-winning (3x) Spike Lee documentary. Screened at Venice Film Festival. Mackie credited as Tulane faculty and Channel Zero founder.", tier:"Tier 1", featured:true },
+  { id:80, title:"NPR All Things Considered - Spike Lee on Race, Politics and Broken Levees", outlet:"NPR", type:"Radio", date:"2006-08-13", year:2006, city:"Remote / National", lat:38.9, lng:-77.04, url:"https://www.npr.org/2006/08/13/5641453/spike-lee-on-race-politics-and-broken-levees", description:"NPR nationally broadcast segment featuring interview clip of 'Tulane University engineering Professor Calvin Mackie' from When the Levees Broke.", tier:"Tier 1", featured:false },
+  { id:81, title:"Good Morning Kuwait - International TV Appearance", outlet:"Kuwaiti Television", type:"TV", date:"2006-01-01", year:2006, city:"Kuwait City, Kuwait", lat:29.38, lng:47.99, url:"", description:"TV appearance as Louisiana Recovery Authority ambassador and guest of U.S. Embassy in Kuwait. Also appeared in international Arab newspapers.", tier:"Tier 1", featured:false },
+
+  // == 2005 ==
+  { id:82, title:"Louisiana Recovery Authority - Board Appointment", outlet:"Office of the Governor (Blanco)", type:"Policy", date:"2005-11-01", year:2005, city:"Baton Rouge, LA", lat:30.45, lng:-91.19, url:"", description:"Appointed by Gov. Kathleen Blanco to 33-member board leading post-Hurricane Katrina rebuilding. Served as LRA ambassador to Kuwait.", tier:"Tier 1", featured:false },
+  { id:83, title:"A View from the Roof: Lessons for Life and Business (Book Published)", outlet:"Acanthus Publishing", type:"Press", date:"2005-11-01", year:2005, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.amazon.com/View-Roof-Lessons-Life-Business/dp/0975481037", description:"Published motivational memoir drawing on father Willie Mackie Sr.'s wisdom as a New Orleans roofer. ISBN 9780975481035. Adopted as course material.", tier:"Tier 1", featured:false },
+  { id:84, title:"Tulane Engineer, Motivational Speaker Calvin Mackie to Visit MSU", outlet:"Mississippi State University", type:"Article", date:"2005-10-01", year:2005, city:"Starkville, MS", lat:33.46, lng:-88.82, url:"https://www.newsarchive.msstate.edu/newsroom/article/2005/10/tulane-engineer-motivational-speaker-calvin-mackie-visit-msu", description:"MSU profile announcing Mackie's campus visit as Tulane professor and motivational speaker.", tier:"Tier 2", featured:false },
+
+  // == 2003-2004 ==
+  { id:85, title:"Presidential Award for Excellence in STEM Mentoring (PAESMEM) - Individual", outlet:"White House / NSF (Bush)", type:"Award", date:"2003-01-01", year:2003, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"https://paesmem.nsf.gov/recognition/awardeeCurrentProfile/1007", description:"Nation's highest mentoring honor. White House ceremony with President George W. Bush (2004). $10,000 grant. One of only a handful of Americans to later also receive the organizational PAESMEM.", tier:"Tier 1", featured:true },
+
+  // == 2002 ==
+  { id:86, title:"First African American Tenured at Tulane School of Engineering", outlet:"Tulane University", type:"Award", date:"2002-01-01", year:2002, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Historic milestone: first African American to receive tenure at Tulane University School of Engineering.", tier:"Tier 1", featured:true },
+  { id:87, title:"Black Engineer of the Year Award - College Level Educator", outlet:"Career Communications Group / BEYA", type:"Award", date:"2002-02-01", year:2002, city:"Baltimore, MD", lat:39.29, lng:-76.61, url:"", description:"National recognition for excellence in engineering education at the Black Engineer of the Year Awards.", tier:"Tier 1", featured:false },
+  { id:88, title:"Pi Tau Sigma/ASME Excellence in Teaching Award (2nd)", outlet:"Pi Tau Sigma / ASME", type:"Award", date:"2002-01-01", year:2002, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Second Pi Tau Sigma/ASME Excellence in Teaching Award in Mechanical Engineering at Tulane (2001-2002).", tier:"Tier 2", featured:false },
+
+  // == 2000 ==
+  { id:89, title:"Pi Tau Sigma/ASME Excellence in Teaching Award (1st)", outlet:"Pi Tau Sigma / ASME", type:"Award", date:"2000-01-01", year:2000, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"First Pi Tau Sigma/ASME Excellence in Teaching Award in Mechanical Engineering at Tulane (1999-2000).", tier:"Tier 2", featured:false },
+
+  // == 1999 ==
+  { id:90, title:"US Patent #US5988565A - Overhead Aircraft Luggage Bin", outlet:"USPTO", type:"Award", date:"1999-11-23", year:1999, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://patents.google.com/patent/US5988565A/en", description:"Patent for overhead luggage bin safety mechanism for Boeing 737/757. Co-invented with Benjamin Hall Thomas. Cited by 37 subsequent patents.", tier:"Tier 1", featured:false },
+
+  // == Morehouse Tradition ==
+  { id:91, title:"Morehouse College New Student Orientation - 20 Consecutive Years", outlet:"Morehouse College", type:"Keynote", date:"2019-08-01", year:2019, city:"Atlanta, GA", lat:33.75, lng:-84.39, url:"", description:"Landmark 20-year tradition (1999-2019) of delivering keynote at Morehouse College New Student Orientation. Unbroken annual streak.", tier:"Tier 1", featured:true },
+
+  // == Podcast Episodes ==
+  { id:92, title:"Let's Talk STEM - Vernier Science Education", outlet:"Let's Talk STEM Podcast", type:"Podcast", date:"2022-03-02", year:2022, city:"Remote", lat:29.95, lng:-90.07, url:"https://www.youtube.com/watch?v=Gd6657-QWAs", description:"Podcast with David and Christine Vernier on STEM teaching technology.", tier:"Tier 2", featured:false },
+  { id:93, title:"Let's Talk STEM - Dr. Carlotta Berry (Black Educators)", outlet:"Let's Talk STEM Podcast", type:"Podcast", date:"2021-10-19", year:2021, city:"Remote", lat:29.95, lng:-90.07, url:"", description:"Podcast with Rose-Hulman ECE Professor on engineering education and Black educators.", tier:"Tier 2", featured:false },
+  { id:94, title:"Let's Talk STEM - Monica Lee Foley (NASA)", outlet:"Let's Talk STEM Podcast", type:"Podcast", date:"2021-11-09", year:2021, city:"Remote", lat:29.95, lng:-90.07, url:"", description:"Podcast with NASA Johnson Space Center Chief of Staff on rocket science and Moon/Mars missions.", tier:"Tier 2", featured:false },
+  { id:95, title:"Let's Talk STEM - Sevetri Wilson ($50M Tech Founder)", outlet:"Let's Talk STEM Podcast", type:"Podcast", date:"2021-12-01", year:2021, city:"Remote", lat:29.95, lng:-90.07, url:"", description:"Podcast with Resilia CEO, Black woman tech founder who raised $50M in venture capital.", tier:"Tier 2", featured:false },
+  { id:96, title:"Let's Talk STEM - Kate Ayers (St. Jude, Racial Inequities in Education)", outlet:"Let's Talk STEM Podcast", type:"Podcast", date:"2022-06-01", year:2022, city:"Remote", lat:29.95, lng:-90.07, url:"", description:"Podcast on racial inequities in STEM education in Memphis with St. Jude's Director of STEM Education.", tier:"Tier 2", featured:false },
+  { id:97, title:"Let's Talk STEM - Jackie Smalls (Code.org)", outlet:"Let's Talk STEM Podcast", type:"Podcast", date:"2022-09-01", year:2022, city:"Remote", lat:29.95, lng:-90.07, url:"", description:"Podcast with Code.org Chief Programs Officer on the racial divide in computer science education.", tier:"Tier 2", featured:false },
+  { id:98, title:"Xavier University CAT FooD Podcast - Calvin Mackie on STEM", outlet:"Xavier University of Louisiana", type:"Podcast", date:"2021-01-01", year:2021, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://cat.xula.edu/food/conversation-45/", description:"Guest on Xavier's CAT FooD podcast series on teaching, learning, and service learning.", tier:"Tier 2", featured:false },
+
+  // == Additional Press ==
+  { id:99, title:"STEM NOLA Receives $2M Congressional Appropriation", outlet:"Rep. Troy Carter / House.gov", type:"Press", date:"2023-07-01", year:2023, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"", description:"Rep. Troy Carter secures $2 million FY2023 Congressional appropriation for STEM NOLA Center for Innovative Training of Youth.", tier:"Tier 1", featured:false },
+  { id:100, title:"Dr. Calvin Mackie Receives President's Award from LAE", outlet:"MyNewOrleans.com", type:"Article", date:"2024-01-01", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.myneworleans.com/dr-calvin-mackie-receives-presidents-award-from-louisiana-association-of-educators/", description:"Coverage of Louisiana Association of Educators President's Award.", tier:"Tier 2", featured:false },
+  { id:101, title:"Entergy Corporation Multi-Year Sponsorship", outlet:"SGA Newsroom / Entergy", type:"Press", date:"2022-01-01", year:2022, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Multi-year prime sponsorship from Entergy Corporation totaling $500K+ cumulative. Sponsors monthly STEM Saturdays.", tier:"Tier 2", featured:false },
+  { id:102, title:"AARP Video: This Man Is Inspiring a Generation of Future Innovators", outlet:"AARP", type:"Social", date:"2024-10-01", year:2024, city:"Remote", lat:38.9, lng:-77.04, url:"https://www.aarp.org/videos/advocacy/6362714845112/", description:"AARP video feature profiling Dr. Mackie as Purpose Prize winner inspiring future innovators.", tier:"Tier 2", featured:false },
+  { id:103, title:"Gambit Thumbs Up - AARP Purpose Prize", outlet:"NOLA.com / Gambit", type:"Article", date:"2024-09-16", year:2024, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.nola.com/gambit/news/thumbs_up_down/gambits-thumbs-up-thumbs-down-for-sept-16/article_7e79084c-6fb7-11ef-97d0-63dd3677b319.html", description:"New Orleans Gambit 'Thumbs Up' recognizing Dr. Mackie's AARP Purpose Prize win.", tier:"Tier 2", featured:false },
+  { id:104, title:"Fort Valley State University Welcome Week - Keynote", outlet:"Fort Valley State University", type:"Keynote", date:"2015-08-01", year:2015, city:"Fort Valley, GA", lat:32.55, lng:-83.89, url:"https://www.fvsu.edu/author-calvin-mackie-to-address-new-students-during-fort-valley-states-welcome-week/", description:"Keynote addressing new students during Fort Valley State University's Welcome Week.", tier:"Tier 2", featured:false },
+  { id:105, title:"STEM Ecosystems Webinar: A Message on Hope", outlet:"STEM Learning Ecosystems", type:"Conference", date:"2020-05-01", year:2020, city:"Remote", lat:38.9, lng:-77.04, url:"https://stemecosystems.org/webinar/dr-calvin-mackie-gives-a-message-on-hope/", description:"Webinar on finding purpose during crisis, sharing post-Katrina recovery lessons during COVID-19.", tier:"Tier 2", featured:false },
+  { id:106, title:"National Academies PreK-12 STEM Education Innovations Presentation", outlet:"National Academies of Sciences", type:"Conference", date:"2021-01-01", year:2021, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"", description:"Public presentation to National Academies Board on Science Education exploring STEM ecosystem approaches.", tier:"Tier 1", featured:false },
+  { id:107, title:"U.S. Embassy Tanzania Partnership - STEM Teacher Training", outlet:"U.S. Embassy / STEM Global Action", type:"Press", date:"2022-08-01", year:2022, city:"Dar es Salaam, Tanzania", lat:-6.79, lng:39.28, url:"", description:"International partnership with U.S. Embassy in Tanzania for STEM teacher training and science kit delivery.", tier:"Tier 1", featured:false },
+  { id:108, title:"Grandma's Hands: Cherished Moments of Faith and Wisdom (Book Published)", outlet:"Acanthus Publishing", type:"Press", date:"2012-04-01", year:2012, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"https://www.amazon.com/Grandmas-Hands-Cherished-Moments-Wisdom/dp/0984733329", description:"Published 100+ proverbs paired with Bible passages and personal reflections. Foreword by Fred Luter Jr. Won 2012 Living Now Book Awards Silver Medal.", tier:"Tier 2", featured:false },
+  { id:109, title:"NSF ERC Biennial Meeting 2022", outlet:"National Science Foundation", type:"Conference", date:"2022-07-01", year:2022, city:"Washington, D.C.", lat:38.9, lng:-77.04, url:"", description:"Presentation on community-based STEM education models at NSF Engineering Research Centers Biennial Meeting.", tier:"Tier 2", featured:false },
+  { id:110, title:"EducatorExchange 2023 Keynote - Recruiting STEM Educators of Color", outlet:"EducatorExchange", type:"Keynote", date:"2023-01-25", year:2023, city:"New Orleans, LA", lat:29.95, lng:-90.07, url:"", description:"Keynote on recruiting and retaining STEM educators of color at EducatorExchange conference.", tier:"Tier 2", featured:false },
+  { id:111, title:"NACAC Guiding the Way to Inclusion - Keynote", outlet:"NACAC", type:"Keynote", date:"2023-01-01", year:2023, city:"Remote", lat:38.9, lng:-77.04, url:"", description:"Keynote at National Association for College Admission Counseling conference on inclusion and STEM pathways.", tier:"Tier 2", featured:false },
+  { id:112, title:"Duke University Effective Leadership Program - Inaugural Fellow", outlet:"Duke University / Southern University", type:"Award", date:"2008-01-01", year:2008, city:"Durham, NC", lat:35.99, lng:-78.9, url:"", description:"Inaugural class Fellow at Center for Leadership and Public Values, Duke University and Southern University College of Business.", tier:"Tier 2", featured:false },
+];
+
+// Computed Stats
+function computeStats() {
+  const byType = {}, byYear = {};
+  const cities = new Set(), outlets = new Set();
+  let tier1 = 0;
+  MEDIA_DATA.forEach(m => {
+    byType[m.type] = (byType[m.type] || 0) + 1;
+    byYear[m.year] = (byYear[m.year] || 0) + 1;
+    if (m.city && m.city !== "Remote" && m.city !== "[TBD]" && m.city !== "Remote / National" && m.city !== "National") {
+      cities.add(m.city.split("/")[0].trim());
+    }
+    outlets.add(m.outlet);
+    if (m.tier === "Tier 1") tier1++;
+  });
+  return { total: MEDIA_DATA.length, byType, byYear, cities: cities.size, outlets: outlets.size, tier1 };
+}
+const STATS = computeStats();
+const TYPES = ["All","TV","Article","Documentary","Keynote","Conference","Podcast","Press","Radio","Award","Policy","Social","Op-Ed"];
+const YEARS = ["All",...[...new Set(MEDIA_DATA.map(m => m.year))].sort((a,b) => b-a).map(String)];
+
+// Theme - Dark only, STEM NOLA brand
+const GREEN = "#00A74A";
+const RED = "#CE1126";
+const t = {
+  bg: "#0A0A0A", surface: "#111111", surfaceAlt: "#080808",
+  border: "rgba(255,255,255,0.12)", borderMid: "rgba(255,255,255,0.22)",
+  text: "#FFFFFF", textSub: "#8A8A8A", textMuted: "#3A3A3A",
+  textTitle: "#FFFFFF",
+  accent: GREEN, accentGlow: "rgba(0,167,74,0.10)", accentSoft: "#1A3828",
+  red: RED, redGlow: "rgba(206,17,38,0.10)",
+  card: "#111111", cardHover: "#1A1A1A",
+  shadow: "0 2px 12px rgba(0,0,0,0.5)", shadowLg: "0 8px 40px rgba(0,0,0,0.7)",
+  statBg: "#000000",
+  navBg: "#050505", navActive: "#111111",
+  tabShadow: "0 2px 6px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)",
+};
+
+// Type colors - Muted Studio Palette for dark mode
+const typeColor = (type) => {
+  const DB = "#050505";
+  const M = {
+    TV:         { bg:DB, text:"#CE1126" },
+    Article:    { bg:DB, text:"#E04858" },
+    Documentary:{ bg:DB, text:"#D03040" },
+    Keynote:    { bg:DB, text:"#B81828" },
+    Conference: { bg:DB, text:"#E86878" },
+    Podcast:    { bg:DB, text:"#A82030" },
+    Press:      { bg:DB, text:"#C83848" },
+    Radio:      { bg:DB, text:"#D44050" },
+    Award:      { bg:DB, text:"#E05060" },
+    Policy:     { bg:DB, text:"#9A1824" },
+    Social:     { bg:DB, text:"#B02838" },
+    "Op-Ed":    { bg:DB, text:"#D85868" },
+  };
+  return M[type] || M.Press;
+};
+
+// SVG Icons
+const Icon = ({ name, size = 16 }) => {
+  const I = {
+    link: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+    star: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    pin:  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    clock:<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+    search:<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+    gear: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  };
+  return I[name] || null;
+};
+
+// City Coordinates
+const CITY_COORDS = {
+  "new orleans, la":   [29.95,-90.07],
+  "atlanta, ga":       [33.75,-84.39],
+  "washington, d.c.":  [38.90,-77.04], "washington, d.c":  [38.90,-77.04],
+  "memphis, tn":       [35.15,-90.05],
+  "tuskegee, al":      [32.43,-85.71],
+  "princeton, nj":     [40.35,-74.66],
+  "new york, ny":      [40.71,-74.01],
+  "baltimore, md":     [39.29,-76.61],
+  "baton rouge, la":   [30.45,-91.19],
+  "fort valley, ga":   [32.55,-83.89],
+  "starkville, ms":    [33.46,-88.82],
+  "orlando, fl":       [28.54,-81.38],
+  "denver, co":        [39.74,-104.99],
+  "minneapolis, mn":   [44.97,-93.27],
+  "tacoma, wa":        [47.25,-122.44],
+  "tallahassee, fl":   [30.42,-84.28],
+  "durham, nc":        [35.99,-78.90],
+  "grambling, la":     [32.53,-92.71],
+  "milwaukee, wi":     [43.04,-87.90],
+  "fairfax, va":       [38.83,-77.31],
+  "chicago, il":       [41.88,-87.63],
+};
+
+const getCityCoords = (city) => {
+  if (!city || city === "Remote" || city === "[TBD]" || city === "National" || city === "Remote / National" || city === "Virtual") return null;
+  const key = city.toLowerCase().split("/")[0].trim();
+  for (const [k, v] of Object.entries(CITY_COORDS)) {
+    if (key.includes(k) || k.includes(key)) return v;
+  }
+  return null;
+};
+
+// US Map Component
+const USMap = ({ data }) => {
+  const svgRef = useRef(null);
+  const [selCity, setSelCity] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(false);
+  const [animDone, setAnimDone] = useState(false);
+
+  const cityMap = {};
+  data.forEach(m => {
+    const coords = getCityCoords(m.city);
+    if (!coords) return;
+    const key = `${coords[0].toFixed(2)},${coords[1].toFixed(2)}`;
+    if (!cityMap[key]) cityMap[key] = { lat: coords[0], lng: coords[1], city: m.city.split("/")[0].trim(), items: [] };
+    cityMap[key].items.push(m);
+  });
+  const cities = Object.values(cityMap).map(c => ({
+    ...c,
+    items: c.items.sort((a,b) => new Date(a.date)-new Date(b.date)),
+    first: c.items.reduce((e,m) => new Date(m.date)<new Date(e.date)?m:e, c.items[0]),
+  })).sort((a,b) => new Date(a.first.date)-new Date(b.first.date));
+
+  const maxCount = Math.max(1, ...cities.map(c => c.items.length));
+
+  const stateCounts = {};
+  data.forEach(m => {
+    const city = (m.city||"").toLowerCase();
+    if (city.includes("washington, d")) stateCounts["DC"]=(stateCounts["DC"]||0)+1;
+    else if (city.includes(", ny")||city.includes("new york")) stateCounts["NY"]=(stateCounts["NY"]||0)+1;
+    else if (city.includes(", fl")||city.includes("tallahassee")||city.includes("orlando")) stateCounts["FL"]=(stateCounts["FL"]||0)+1;
+    else if (city.includes(", la")||city.includes("new orleans")||city.includes("baton rouge")||city.includes("grambling")) stateCounts["LA"]=(stateCounts["LA"]||0)+1;
+    else if (city.includes(", ga")||city.includes("atlanta")||city.includes("fort valley")) stateCounts["GA"]=(stateCounts["GA"]||0)+1;
+    else if (city.includes(", md")||city.includes("baltimore")) stateCounts["MD"]=(stateCounts["MD"]||0)+1;
+    else if (city.includes(", tn")||city.includes("memphis")) stateCounts["TN"]=(stateCounts["TN"]||0)+1;
+    else if (city.includes(", al")||city.includes("tuskegee")) stateCounts["AL"]=(stateCounts["AL"]||0)+1;
+    else if (city.includes(", nj")||city.includes("princeton")) stateCounts["NJ"]=(stateCounts["NJ"]||0)+1;
+    else if (city.includes(", co")||city.includes("denver")) stateCounts["CO"]=(stateCounts["CO"]||0)+1;
+    else if (city.includes(", mn")||city.includes("minneapolis")) stateCounts["MN"]=(stateCounts["MN"]||0)+1;
+    else if (city.includes(", wa")||city.includes("tacoma")) stateCounts["WA"]=(stateCounts["WA"]||0)+1;
+    else if (city.includes(", nc")||city.includes("durham")) stateCounts["NC"]=(stateCounts["NC"]||0)+1;
+    else if (city.includes(", ms")||city.includes("starkville")) stateCounts["MS"]=(stateCounts["MS"]||0)+1;
+    else if (city.includes(", wi")||city.includes("milwaukee")) stateCounts["WI"]=(stateCounts["WI"]||0)+1;
+    else if (city.includes(", va")||city.includes("fairfax")) stateCounts["VA"]=(stateCounts["VA"]||0)+1;
+  });
+
+  const selCityItems = selCity ? (cityMap[selCity]?.items || []).sort((a,b)=>new Date(b.date)-new Date(a.date)) : [];
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true); setErr(false); setAnimDone(false); setSelCity(null);
+    const W = 600, H = 360;
+
+    const loadMap = async () => {
+      try {
+        await new Promise((resolve, reject) => {
+          if (window.topojson) { resolve(); return; }
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js";
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+
+        const usRaw = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(r=>r.json());
+        if (!mounted) return;
+
+        const states = window.topojson.feature(usRaw, usRaw.objects.states);
+        const svg = d3.select(svgRef.current);
+        svg.selectAll("*").remove();
+
+        const proj = d3.geoAlbersUsa().fitSize([W, H], states);
+        const path = d3.geoPath().projection(proj);
+
+        svg.append("g").selectAll("path")
+          .data(states.features)
+          .join("path")
+          .attr("d", path)
+          .attr("fill", "#111111")
+          .attr("stroke", GREEN)
+          .attr("stroke-width", 0.4)
+          .attr("stroke-opacity", 0.3);
+
+        if (mounted) setLoading(false);
+
+        const DELAY = 65;
+        cities.forEach((city, i) => {
+          const coords = proj([city.lng, city.lat]);
+          if (!coords) return;
+          const [cx, cy] = coords;
+          const key = `${city.lat.toFixed(2)},${city.lng.toFixed(2)}`;
+          const n = city.items.length;
+          const haloR = 5 + (n / maxCount) * 18;
+          const haloOp = 0.15 + (n / maxCount) * 0.60;
+          const coreR = 5;
+
+          setTimeout(() => {
+            if (!mounted) return;
+            const g = svg.append("g")
+              .attr("transform", `translate(${cx},${cy})`)
+              .style("cursor", "pointer")
+              .on("click", () => setSelCity(s => s===key ? null : key))
+              .on("mouseenter", function() { d3.select(this).select("circle").attr("opacity", Math.min(haloOp + 0.15, 1)); })
+              .on("mouseleave", function() { d3.select(this).select("circle").attr("opacity", haloOp); });
+
+            g.append("circle").attr("r", 0).attr("fill", GREEN).attr("opacity", haloOp)
+              .transition().duration(400).ease(d3.easeQuadOut).attr("r", haloR);
+            g.append("circle").attr("r", 0).attr("fill", GREEN).attr("opacity", 1)
+              .transition().duration(300).delay(150).ease(d3.easeBackOut.overshoot(2.2)).attr("r", coreR);
+            g.append("title").text(`${city.city} - ${n} appearance${n>1?"s":""}`);
+
+            if (i === cities.length - 1) {
+              setTimeout(() => { if (mounted) setAnimDone(true); }, 400);
+            }
+          }, i * DELAY);
+        });
+      } catch(e) { if (mounted) { setErr(true); setLoading(false); } }
+    };
+    loadMap();
+    return () => { mounted = false; };
+  }, []);
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+      <div style={{ background:t.card, border:`1px solid ${t.border}`, borderRadius:12, padding:"18px 20px", boxShadow:t.shadow }}>
+        <div style={{ fontSize:15, fontWeight:600, color:t.textTitle, marginBottom:3 }}>Geographic Media Reach</div>
+        <div style={{ fontSize:13, color:t.textSub, marginBottom:12 }}>
+          {cities.length} cities across {Object.keys(stateCounts).length} states | Markers populate chronologically | Click any marker to expand
+        </div>
+        {loading && <div style={{ textAlign:"center", padding:"60px 0", color:t.textSub, fontSize:15 }}>Loading map...</div>}
+        {err && <div style={{ textAlign:"center", padding:"60px 0", color:t.textSub, fontSize:15 }}>Map unavailable</div>}
+        <svg ref={svgRef} viewBox="0 0 600 360" style={{ width:"75%", display:loading||err?"none":"block", margin:"0 auto" }} />
+        {selCity && selCityItems.length > 0 && (
+          <div style={{ marginTop:12, padding:"10px 14px", background:t.accentGlow, borderRadius:8, border:`1px solid ${t.border}` }}>
+            <div style={{ fontSize:13, fontWeight:700, color:t.accent, marginBottom:8 }}>
+              {cityMap[selCity]?.city} - {selCityItems.length} appearance{selCityItems.length>1?"s":""}
+            </div>
+            {selCityItems.map(m => (
+              <div key={m.id} style={{ fontSize:13, color:t.text, padding:"3px 0 3px 10px", borderLeft:`2px solid ${t.accent}`, marginBottom:3, lineHeight:1.4 }}>
+                <span style={{ fontWeight:600, color:t.textSub }}>{m.date.slice(5,7)}/{m.date.slice(0,4)}</span> | {m.title}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ background:t.card, border:`1px solid ${t.border}`, borderRadius:12, padding:"16px 20px", boxShadow:t.shadow }}>
+        <div style={{ fontSize:15, fontWeight:600, color:t.textTitle, marginBottom:3 }}>States and Appearances</div>
+        <div style={{ fontSize:13, color:t.textSub, marginBottom:14 }}>Click any state to expand</div>
+        <div style={{ columns:"2", columnGap:24 }}>
+          {Object.entries(stateCounts).sort((a,b) => b[1]-a[1]).map(([ab, n]) => {
+            const stateEntries = data.filter(m => {
+              const c = (m.city||"").toLowerCase();
+              if (ab==="DC") return c.includes("washington, d");
+              if (ab==="LA") return c.includes(", la")||c.includes("new orleans")||c.includes("baton rouge")||c.includes("grambling");
+              if (ab==="GA") return c.includes(", ga")||c.includes("atlanta")||c.includes("fort valley");
+              if (ab==="FL") return c.includes(", fl")||c.includes("tallahassee")||c.includes("orlando");
+              if (ab==="NY") return c.includes(", ny")||c.includes("new york");
+              if (ab==="MD") return c.includes(", md")||c.includes("baltimore");
+              if (ab==="TN") return c.includes(", tn")||c.includes("memphis");
+              if (ab==="AL") return c.includes(", al")||c.includes("tuskegee");
+              if (ab==="NJ") return c.includes(", nj")||c.includes("princeton");
+              if (ab==="CO") return c.includes(", co")||c.includes("denver");
+              if (ab==="MN") return c.includes(", mn")||c.includes("minneapolis");
+              if (ab==="WA") return c.includes(", wa")||c.includes("tacoma");
+              if (ab==="NC") return c.includes(", nc")||c.includes("durham");
+              if (ab==="MS") return c.includes(", ms")||c.includes("starkville");
+              if (ab==="WI") return c.includes(", wi")||c.includes("milwaukee");
+              if (ab==="VA") return c.includes(", va")||c.includes("fairfax");
+              return false;
+            }).sort((a,b) => new Date(b.date)-new Date(a.date));
+            const open = selCity === ab;
+            return (
+              <div key={ab} style={{ breakInside:"avoid" }}>
+                <button onClick={() => setSelCity(s => s===ab ? null : ab)} style={{
+                  width:"100%", textAlign:"left", background:"transparent", border:"none",
+                  padding:"7px 0", cursor:"pointer", borderBottom:`1px solid ${t.border}`,
+                  display:"flex", justifyContent:"space-between", alignItems:"center"
+                }}>
+                  <span style={{ fontSize:14, fontWeight:600, color: open ? t.accent : t.text }}>{ab}</span>
+                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                    <span style={{ fontSize:12, color:GREEN, fontWeight:700 }}>{n}</span>
+                    <span style={{ fontSize:11, color:t.textMuted, display:"inline-block", transition:"transform .15s", transform: open?"rotate(180deg)":"none" }}>&#x25BE;</span>
+                  </div>
+                </button>
+                {open && (
+                  <div style={{ padding:"6px 0 10px" }}>
+                    {stateEntries.map(m => (
+                      <div key={m.id} style={{ fontSize:12, padding:"4px 0 4px 10px", borderLeft:`2px solid ${t.accent}`, marginBottom:3, lineHeight:1.5 }}>
+                        <div style={{ color:t.textSub, marginBottom:1 }}>{m.date.slice(5,7)}/{m.date.slice(0,4)}</div>
+                        {m.url
+                          ? <a href={m.url} target="_blank" rel="noreferrer"
+                              style={{ color:t.accent, textDecoration:"none", fontWeight:500 }}
+                              onMouseEnter={e => e.target.style.textDecoration="underline"}
+                              onMouseLeave={e => e.target.style.textDecoration="none"}>
+                              {m.title.length > 50 ? m.title.slice(0,50)+"..." : m.title}
+                            </a>
+                          : <span style={{ color:t.text }}>{m.title.length > 50 ? m.title.slice(0,50)+"..." : m.title}</span>
+                        }
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main App
+function DrMackieMediaTracker() {
+  const [tab, setTab] = useState("dashboard");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [yearFilter, setYearFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const filtered = MEDIA_DATA.filter(m => {
+    if (typeFilter !== "All" && m.type !== typeFilter) return false;
+    if (yearFilter !== "All" && m.year !== parseInt(yearFilter)) return false;
+    if (search && !m.title.toLowerCase().includes(search.toLowerCase()) &&
+        !m.outlet.toLowerCase().includes(search.toLowerCase()) &&
+        !(m.city||"").toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }).sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  const featured = MEDIA_DATA.filter(m => m.featured).sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  const tabPill = (id) => ({
+    padding: "6px 15px", borderRadius: 6,
+    background: tab===id ? t.navActive : "transparent",
+    color: tab===id ? "#FFFFFF" : t.accent,
+    border: tab===id ? `1px solid ${GREEN}` : `1px solid ${t.border}`,
+    boxShadow: tab===id ? t.tabShadow : "none",
+    fontSize: 11, fontWeight: tab===id ? 700 : 400, textTransform: "uppercase", letterSpacing: "0.05em",
+    cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+  });
+
+  const typeBadge = (type) => {
+    const c = typeColor(type);
+    return { display:"inline-flex", alignItems:"center", padding:"2px 0", borderRadius:0, fontSize:10, fontWeight:400, letterSpacing:"0.06em", textTransform:"uppercase", background:"transparent", color:c.text, border:"none" };
+  };
+
+  const HCard = ({ children, style, onClick }) => {
+    const [h, setH] = useState(false);
+    return <div onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} onClick={onClick} style={typeof style === "function" ? style(h) : style}>{typeof children === "function" ? children(h) : children}</div>;
+  };
+
+  const cardBase = (h) => ({
+    background: h ? t.cardHover : t.card, border:`1px solid ${h ? t.borderMid : t.border}`,
+    borderRadius:12, padding:"16px 18px", cursor:"pointer",
+    transition:"all 0.15s", transform: h ? "translateY(-1px)" : "none",
+    boxShadow: h ? t.shadow : "none",
+  });
+
+  // Count-Up Hook
+  const useCountUp = (target, duration = 900) => {
+    const [val, setVal] = useState(0);
+    const num = parseFloat(String(target).replace(/[^0-9.]/g, ""));
+    const suffix = String(target).replace(/[0-9.]/g, "");
+    useEffect(() => {
+      if (!num) { setVal(0); return; }
+      let start = null;
+      const step = (ts) => {
+        if (!start) start = ts;
+        const p = Math.min((ts - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        setVal(Math.round(ease * num));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, [num]);
+    return val + suffix;
+  };
+
+  const StatBlock = ({ n, l, fill }) => {
+    const display = useCountUp(n);
+    return (
+      <div style={{
+        background: "#000000",
+        border: `1px solid rgba(255,255,255,0.10)`,
+        borderRadius:8, padding:"14px 12px", textAlign:"center",
+        height: fill ? "100%" : "auto",
+        display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+      }}>
+        <div style={{ fontSize:22, fontWeight:800, color:GREEN, lineHeight:1 }}>{display}</div>
+        <div style={{ fontSize:10, color:t.textTitle, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8, marginTop:3 }}>{l}</div>
+      </div>
+    );
+  };
+
+  // Dashboard
+  const Dashboard = () => {
+    const recent = [...MEDIA_DATA].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,6);
+    const typeBreakdown = Object.entries(STATS.byType).sort((a,b) => b[1]-a[1]);
+    const yearBreakdown = Object.entries(STATS.byYear).sort((a,b) => b[0]-a[0]);
+    const maxY = Math.max(...Object.values(STATS.byYear));
+    return (
+      <div>
+        {/* Hero */}
+        <div style={{ background:"linear-gradient(135deg,#0A0A0A,#0D0D0D)", border:`1px solid ${t.border}`, borderRadius:16, padding:"24px 28px", marginBottom:24, position:"relative", overflow:"hidden", display:"flex", gap:24, alignItems:"stretch" }}>
+          <div style={{ position:"absolute", right:-40, top:-40, width:280, height:280, borderRadius:"50%", background:"radial-gradient(circle,rgba(0,167,74,0.06) 0%,transparent 70%)", pointerEvents:"none" }} />
+          <div style={{ position:"absolute", left:-20, bottom:-60, width:200, height:200, borderRadius:"50%", background:"radial-gradient(circle,rgba(206,17,38,0.04) 0%,transparent 70%)", pointerEvents:"none" }} />
+
+          {/* Left - name, subtitle, 2x5 stat grid */}
+          <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0, gap:16 }}>
+            <div>
+              <div style={{ fontSize:28, fontWeight:800, fontFamily:"'Sora',sans-serif", letterSpacing:-0.5, color:t.textTitle, marginBottom:2 }}>Dr. Calvin Mackie, PhD</div>
+              <div style={{ fontSize:13, color:t.textSub, fontWeight:700 }}>Founder & President | STEM NOLA | STEM Global Action | Media Intelligence Dashboard | Updated April 2026</div>
+            </div>
+            <div style={{ flex:1, display:"grid", gridTemplateColumns:"repeat(5,1fr)", gridTemplateRows:"repeat(2,1fr)", gap:8 }}>
+              {[
+                ["200000+","Students Impacted"],
+                ["25000+","Families Reached"],
+                ["5100+","Schools"],
+                [STATS.total+"","Catalogued Entries"],
+                [STATS.tier1+"","Tier 1 Placements"],
+                ["47+5","States + Countries"],
+                ["35+","Years Active"],
+                ["7+","Grants (M$)"],
+                ["3","Spike Lee Films"],
+                ["2","Presidential Awards"],
+              ].map(([n,l]) => (
+                <StatBlock key={l} n={n} l={l} fill={true} />
+              ))}
+            </div>
+          </div>
+
+          {/* Right - featured clip */}
+          <div style={{ width:220, flexShrink:0, display:"flex", flexDirection:"column", border:`1px solid ${t.border}`, borderRadius:12, padding:"14px", gap:6, background:"rgba(0,0,0,0.15)" }}>
+            <div style={{ fontSize:11, fontWeight:700, color:t.textTitle, textTransform:"uppercase", letterSpacing:"0.06em" }}>Featured Clip</div>
+            <a href="https://github.com/jimmieldavis/dr-mackie-media/blob/main/DrCalvinMackie_STEMKitsSparkedKidsCuriosity%26Confidence%5BVIDEO%5D.mp4" target="_blank" rel="noopener noreferrer" style={{ fontSize:12, fontWeight:400, color:"#FFFFFF", lineHeight:1.3, textDecoration:"none" }}>STEM Kits Sparked Kids' Curiosity & Confidence</a>
+            <div style={{ fontSize:11, color:t.accent, fontWeight:500, marginBottom:2 }}>STEM NOLA</div>
+            <video
+              controls
+              preload="metadata"
+              style={{ width:"100%", borderRadius:8, background:"#000", display:"block", flex:1, minHeight:0, objectFit:"cover" }}
+              src="https://github.com/jimmieldavis/dr-mackie-media/raw/refs/heads/main/DrCalvinMackie_STEMKitsSparkedKidsCuriosity&Confidence%5BVIDEO%5D.mp4"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
+        {/* Flagship */}
+        <div style={{ fontSize:17, fontWeight:700, color:t.textTitle, marginBottom:14 }}>Flagship Appearances</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
+          {featured.slice(0,9).map(item => (
+            <HCard key={item.id} style={cardBase} onClick={() => setSelected(item)}>
+              {h => (
+                <div style={{ ...cardBase(h), display:"flex", flexDirection:"column", minHeight:110 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:t.text, lineHeight:1.4, marginBottom:4, flex:1 }}>{item.title}</div>
+                  <div style={{ fontSize:12, color:t.accent, fontWeight:600, marginBottom:6 }}>{item.outlet}</div>
+                  <div style={{ fontSize:12, color:t.textSub, marginBottom:8 }}>
+                    <span>{item.date.slice(5,7)}/{item.date.slice(0,4)}</span>
+                    {item.city && item.city!=="Remote" && item.city!=="[TBD]" && <span> | {item.city.split("/")[0].trim()}</span>}
+                  </div>
+                  <span style={typeBadge(item.type)}>{item.type}</span>
+                </div>
+              )}
+            </HCard>
+          ))}
+        </div>
+
+        {/* Breakdowns */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:24 }}>
+          <div style={{ background:t.card, border:`1px solid ${t.border}`, borderRadius:14, padding:"18px 20px", boxShadow:t.shadow }}>
+            <div style={{ fontSize:15, fontWeight:700, color:t.textTitle, marginBottom:14 }}>Appearances by Type</div>
+            {typeBreakdown.map(([type, count], i) => {
+              const pct = Math.round((count/MEDIA_DATA.length)*100);
+              const opacity = 1 - (i * 0.05);
+              const tc = typeColor(type);
+              return (
+                <div key={type} style={{ marginBottom:10 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+                    <span style={{ fontSize:14, fontWeight:500, color:tc.text }}>{type}</span>
+                    <span style={{ fontSize:13, color:t.textSub }}>
+                      <span style={{ color:GREEN, fontWeight:700 }}>{count}</span>
+                      <span> ({pct}%)</span>
+                    </span>
+                  </div>
+                  <div style={{ height:4, borderRadius:2, background:"rgba(255,255,255,0.06)" }}>
+                    <div style={{ width:`${pct}%`, height:"100%", background:GREEN, borderRadius:2, opacity:Math.max(opacity, 0.35) }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ background:t.card, border:`1px solid ${t.border}`, borderRadius:14, padding:"18px 20px", boxShadow:t.shadow }}>
+            <div style={{ fontSize:15, fontWeight:700, color:t.textTitle, marginBottom:14 }}>Appearances by Year</div>
+            {yearBreakdown.map(([year, count]) => {
+              const pct = Math.round((count/maxY)*100);
+              return (
+                <div key={year} style={{ marginBottom:10 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+                    <span style={{ fontSize:14, fontWeight:500, color:t.text }}>{year}</span>
+                    <span style={{ fontSize:13, color:GREEN, fontWeight:700 }}>{count}</span>
+                  </div>
+                  <div style={{ height:4, borderRadius:2, background:"rgba(255,255,255,0.06)" }}>
+                    <div style={{ width:`${pct}%`, height:"100%", background:GREEN, borderRadius:2 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Recent */}
+        <div style={{ fontSize:17, fontWeight:700, color:t.textTitle, marginBottom:14 }}>Most Recent Appearances</div>
+        {recent.map(item => (
+          <HCard key={item.id} onClick={() => setSelected(item)}>
+            {h => (
+              <div style={{ ...cardBase(h), marginBottom:8, display:"flex", gap:0, alignItems:"flex-start" }}>
+                <div style={{ width:72, flexShrink:0, paddingTop:2 }}>
+                  <div style={{ fontSize:12, color:t.textSub, fontWeight:500, whiteSpace:"nowrap" }}>{item.date.slice(5,7)}/{item.date.slice(0,4)}</div>
+                </div>
+                <div style={{ flex:1, minWidth:0, paddingRight:12 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:t.text, marginBottom:3 }}>{item.title}</div>
+                  <div style={{ fontSize:13, color:t.accent, fontWeight:600 }}>{item.outlet}</div>
+                </div>
+                <div style={{ width:72, flexShrink:0, display:"flex", justifyContent:"flex-end", alignItems:"flex-start", paddingTop:2 }}>
+                  <span style={typeBadge(item.type)}>{item.type}</span>
+                </div>
+              </div>
+            )}
+          </HCard>
+        ))}
+      </div>
+    );
+  };
+
+  // Library
+  const Library = () => (
+    <div>
+      <div style={{ background:t.card, border:`1px solid ${t.border}`, borderRadius:10, padding:"12px 16px", marginBottom:14, display:"flex", gap:10, alignItems:"center", flexWrap:"wrap", boxShadow:t.shadow }}>
+        <div style={{ position:"relative", flex:1, minWidth:200 }}>
+          <span style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:t.textMuted }}><Icon name="search" size={13}/></span>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search titles, outlets, cities..."
+            style={{ width:"100%", padding:"7px 12px 7px 32px", borderRadius:6, border:`1px solid ${t.border}`, background:t.bg, color:t.text, fontSize:14, outline:"none", fontFamily:"inherit" }} />
+        </div>
+        {[{val:typeFilter, set:setTypeFilter, opts:TYPES, label:"Type"},{val:yearFilter, set:setYearFilter, opts:YEARS, label:"Year"}].map(({val,set,opts,label}) => (
+          <select key={label} value={val} onChange={e => set(e.target.value)}
+            style={{ padding:"7px 10px", borderRadius:6, border:`1px solid ${t.border}`, background:t.bg, color:t.text, fontSize:14, cursor:"pointer", fontFamily:"inherit" }}>
+            {opts.map(o => <option key={o}>{o}</option>)}
+          </select>
+        ))}
+        <span style={{ fontSize:14, color:t.textSub, whiteSpace:"nowrap", fontWeight:500 }}>{filtered.length} entries</span>
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+        {filtered.map(item => (
+          <div key={item.id} onClick={() => setSelected(item)} style={{ background:t.card, border:`1px solid ${t.border}`, borderRadius:8, padding:"11px 16px", boxShadow:t.shadow, cursor:"pointer", display:"flex", gap:14, alignItems:"flex-start" }}
+            onMouseEnter={e => e.currentTarget.style.background=t.cardHover}
+            onMouseLeave={e => e.currentTarget.style.background=t.card}>
+            <div style={{ width:80, flexShrink:0, paddingTop:1, display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
+              <div style={{ fontSize:12, color:t.textSub, fontWeight:500 }}>{item.date.slice(5,7)}/{item.date.slice(0,4)}</div>
+              <div style={{ marginTop:4 }}><span style={typeBadge(item.type)}>{item.type}</span></div>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:15, fontWeight:600, color:t.text, marginBottom:2, lineHeight:1.35 }}>{item.title}</div>
+              <div style={{ fontSize:13, color:t.accent, fontWeight:500, marginBottom:6 }}>{item.outlet}</div>
+              <div style={{ display:"flex", gap:5, flexWrap:"wrap", alignItems:"center" }}>
+                {item.tier==="Tier 1" && <span style={{ fontSize:10, color:t.text, background:"transparent", padding:"1px 6px", borderRadius:4, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", border:`1px solid ${t.border}` }}>TIER 1</span>}
+                {item.city && item.city!=="Remote" && item.city!=="[TBD]" && <span style={{ fontSize:12, color:t.textSub }}>{item.city}</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+        {filtered.length===0 && <div style={{ textAlign:"center", padding:"48px", color:t.textSub, fontSize:15 }}>No entries match your filters.</div>}
+      </div>
+    </div>
+  );
+
+  // Timeline
+  const Timeline = () => {
+    const byYear = {};
+    MEDIA_DATA.forEach(m => { if (!byYear[m.year]) byYear[m.year]=[]; byYear[m.year].push(m); });
+    return (
+      <div style={{ height:"calc(100vh - 140px)", overflowY:"auto", paddingRight:8 }}>
+        {Object.entries(byYear).sort((a,b) => b[0]-a[0]).map(([yr, items]) => (
+          <div key={yr} style={{ marginBottom:28 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12,
+              position:"sticky", top:0, zIndex:10,
+              background:t.bg, paddingTop:8, paddingBottom:6 }}>
+              <div style={{ fontSize:15, fontWeight:700, color:t.accent, background:t.accentGlow, padding:"3px 12px", borderRadius:5 }}>{yr}</div>
+              <div style={{ fontSize:13, color:t.textSub }}>{items.length} {items.length===1?"entry":"entries"}</div>
+              <div style={{ flex:1, height:"1px", background:t.border }} />
+            </div>
+            <div style={{ paddingLeft:20, borderLeft:`2px solid rgba(0,167,74,0.2)`, display:"flex", flexDirection:"column", gap:5 }}>
+              {items.sort((a,b) => new Date(b.date)-new Date(a.date)).map(item => (
+                <div key={item.id} onClick={() => setSelected(item)} style={{ background:t.card, border:`1px solid ${t.border}`, borderRadius:8, padding:"10px 14px", boxShadow:t.shadow, cursor:"pointer" }}
+                  onMouseEnter={e => e.currentTarget.style.background=t.cardHover}
+                  onMouseLeave={e => e.currentTarget.style.background=t.card}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:14, fontWeight:600, color:t.text, lineHeight:1.35, marginBottom:2 }}>{item.title}</div>
+                      <div style={{ fontSize:13, color:t.textSub }}>{item.outlet}</div>
+                    </div>
+                    <div style={{ flexShrink:0, display:"flex", gap:5, alignItems:"center" }}>
+                      <span style={typeBadge(item.type)}>{item.type}</span>
+                      <span style={{ fontSize:12, color:t.textSub, whiteSpace:"nowrap" }}>{item.date.slice(5,7)}/{item.date.slice(0,4)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Highlights
+  const Highlights = () => {
+    const top = MEDIA_DATA.filter(m => m.tier==="Tier 1").sort((a,b) => new Date(b.date)-new Date(a.date));
+    const showcase = top.filter(m => m.featured).slice(0,12);
+    return (
+      <div>
+        <div style={{ fontSize:15, color:t.textSub, marginBottom:20, lineHeight:1.6 }}>
+          Landmark appearances, top-tier national placements, and pivotal career moments. All Tier 1 placements.
+        </div>
+        {showcase.map((item, i) => (
+          <HCard key={item.id} onClick={() => setSelected(item)}>
+            {h => (
+              <div style={{ ...cardBase(h), marginBottom:12, display:"flex", gap:12, alignItems:"flex-start" }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", gap:6, marginBottom:6, flexWrap:"wrap", alignItems:"center" }}>
+                    <span style={{ fontSize:12, fontWeight:700, letterSpacing:"0.04em", color:t.text, whiteSpace:"nowrap" }}>#{i+1}</span>
+                    <span style={typeBadge(item.type)}>{item.type}</span>
+                    <span style={{ fontSize:10, fontWeight:700, color:t.text, background:"transparent", padding:"1px 7px", borderRadius:4, letterSpacing:"0.06em", textTransform:"uppercase", border:`1px solid ${t.border}` }}>TIER 1</span>
+                  </div>
+                  <div style={{ fontSize:15, fontWeight:700, color:t.text, marginBottom:3 }}>{item.title}</div>
+                  <div style={{ fontSize:13, color:t.accent, fontWeight:600, marginBottom:6 }}>{item.outlet}{item.city && item.city!=="Remote" && item.city!=="[TBD]" ? " | "+item.city.split("/")[0].trim() : ""}</div>
+                  <div style={{ fontSize:13, color:t.textSub, lineHeight:1.6 }}>{item.description}</div>
+                </div>
+                <div style={{ minWidth:70, textAlign:"right" }}>
+                  <div style={{ fontSize:12, color:t.textSub }}>{item.date.slice(5,7)}/{item.date.slice(0,4)}</div>
+                  <div style={{ marginTop:6, fontSize:13, fontWeight:600 }}>
+                    <span style={{ color:GREEN }}>View</span>
+                    <span style={{ color:GREEN }}> &rarr;</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </HCard>
+        ))}
+      </div>
+    );
+  };
+
+  // Modal
+  const Modal = () => {
+    if (!selected) return null;
+    const c = typeColor(selected.type);
+    return (
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.72)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(6px)", padding:24 }} onClick={() => setSelected(null)}>
+        <div style={{ background:t.surface, border:`1px solid ${t.border}`, borderRadius:18, padding:"28px 32px", maxWidth:560, width:"100%", boxShadow:t.shadowLg, position:"relative" }} onClick={e => e.stopPropagation()}>
+          <button style={{ position:"absolute", top:14, right:14, width:28, height:28, borderRadius:6, border:`1px solid ${t.border}`, background:t.surfaceAlt, color:t.textSub, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"sans-serif" }} onClick={() => setSelected(null)}>&#x2715;</button>
+          <div style={{ display:"flex", gap:7, marginBottom:10, flexWrap:"wrap" }}>
+            <span style={typeBadge(selected.type)}>{selected.type}</span>
+            {selected.tier==="Tier 1" && <span style={{ fontSize:10, fontWeight:700, color:t.text, background:"transparent", padding:"2px 8px", borderRadius:4, letterSpacing:"0.06em", textTransform:"uppercase", border:`1px solid ${t.border}` }}>TIER 1</span>}
+          </div>
+          <div style={{ fontSize:20, fontWeight:800, color:t.text, lineHeight:1.3, marginBottom:5 }}>{selected.title}</div>
+          <div style={{ fontSize:15, color:t.accent, fontWeight:600, marginBottom:14 }}>{selected.outlet}</div>
+          <div style={{ display:"flex", gap:16, marginBottom:14, fontSize:14, color:t.textSub, flexWrap:"wrap" }}>
+            <span style={{ display:"flex", gap:5, alignItems:"center" }}><Icon name="clock" size={12}/>{(d => `${d.slice(8,10)}-${["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][parseInt(d.slice(5,7))-1]}-${d.slice(0,4)}`)(selected.date)}</span>
+            {selected.city && <span style={{ display:"flex", gap:5, alignItems:"center" }}><Icon name="pin" size={12}/>{selected.city}</span>}
+          </div>
+          <div style={{ fontSize:15, color:t.text, lineHeight:1.8, padding:"14px 16px", background:t.surfaceAlt, borderRadius:10, border:`1px solid ${t.border}`, marginBottom:16 }}>{selected.description}</div>
+          {selected.url && selected.url !== "" ? (
+            <a href={selected.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration:"none" }}>
+              <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 14px", borderRadius:7, background:t.accentGlow, border:`1px solid ${t.border}`, fontSize:14, fontWeight:600, cursor:"pointer" }}>
+                <span style={{ color:"#FFFFFF", display:"inline-flex" }}><Icon name="link" size={12}/></span>
+                <span style={{ color:GREEN }}>View Source</span>
+              </div>
+            </a>
+          ) : (
+            <div style={{ fontSize:13, color:t.textMuted, fontStyle:"italic" }}>Direct URL: [TBD - pending verification]</div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const tabs = [
+    { id:"dashboard", label:"Dashboard" }, { id:"library", label:"Library" },
+    { id:"timeline", label:"Timeline" }, { id:"map", label:"Outreach" },
+    { id:"highlights", label:"Highlights" },
+  ];
+
+  if (!mounted) return null;
+  return (
+    <div style={{ fontFamily:"'Outfit',system-ui,sans-serif", background:t.bg, minHeight:"100vh", color:t.text, transition:"background 0.3s,color 0.3s" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Outfit:wght@400;500;600;700;800&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${t.border};border-radius:3px}`}</style>
+
+      {/* Header */}
+      <div style={{ background:t.surface, borderBottom:`1px solid ${t.border}`, position:"sticky", top:0, zIndex:100, boxShadow:t.shadow }}>
+        <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 24px", display:"flex", alignItems:"center", justifyContent:"space-between", height:66 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <div style={{ width:48, height:48, borderRadius:8, overflow:"hidden", flexShrink:0, border:`2px solid rgba(255,255,255,0.18)`, boxShadow:"0 0 0 1px rgba(0,167,74,0.35)" }}>
+              <img src={`data:image/jpeg;base64,${HEADSHOT}`} alt="Dr. Calvin Mackie" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+            </div>
+            <div style={{ fontSize:14, fontWeight:700, color:t.textTitle, fontFamily:"'Sora',sans-serif", letterSpacing:"-0.3px" }}>Dr. Calvin Mackie</div>
+          </div>
+
+          <nav style={{ display:"flex", gap:3, background:t.navBg, padding:"5px 6px", borderRadius:8, border:`1px solid ${t.border}` }}>
+            {tabs.map(({ id, label }) => (
+              <button key={id} style={tabPill(id)} onClick={() => setTab(id)}>{label}</button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ padding:"24px", maxWidth:1200, margin:"0 auto" }}>
+        {tab==="dashboard"  && <Dashboard />}
+        {tab==="library"    && <Library />}
+        {tab==="timeline"   && <Timeline />}
+        {tab==="map"        && <USMap data={MEDIA_DATA} />}
+        {tab==="highlights" && <Highlights />}
+      </div>
+
+      <Modal />
+
+      <div style={{ textAlign:"center", padding:"16px", fontSize:12, color:t.textMuted, borderTop:`1px solid ${t.border}` }}>
+        {`Dr. Calvin Mackie Media Tracker v1 | ${STATS.total} verified catalogued entries | Data: Web Research + STEM NOLA/SGA Press | Updated April 7, 2026`}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<DrMackieMediaTracker />);
+</script>
+</body>
+</html>
